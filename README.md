@@ -8,9 +8,8 @@ so for full customization of this package, I recommend cloning the Github Reposi
 and editing as per your need. 
 If you do so you can better customize LoadingIndicator, on error graphics, on no data graphics, and much more.
 
-## Usage
-
-### Controller
+# Usage
+## Controller
 For Normal API request you can use something like this:
 
 ```
@@ -68,7 +67,7 @@ Or, for Pagination API request you can use like this:
 }
 ```
 For this you need to set return type of repository data as [PaginationResponse](#PaginationResponse).
-### Helper Methods
+## Helper Methods
 The best part about this generic state is that it comes with lots of helper methods which removes
 the type casting hassle.
 
@@ -152,7 +151,7 @@ Which can be used in situation like this:
   );
 } 
 ```
-### GenericStateWidget and GenericStatePaginationWidget
+## GenericStateWidget and GenericStatePaginationWidget
 GenericStateWidget and GenericStatePaginationWidget are really useful while dealing with api responses in the application.
 This package handles all the complex use cases which a developer needs to consider while integrating api responses.
 ``` 
@@ -270,7 +269,7 @@ will not work on isSliver is true, you have to manually set loading on the last 
       ],
     )
 ```
-### PaginationResponse
+## PaginationResponse
 Thanks to PaginationResponse, our package figures out whether the page have nextPage or not,
 accordingly whether to load the next or not. And helps on lots of others setups required on pagination.
 ```
@@ -319,6 +318,9 @@ class FriendsRepository extends BaseRepository {
     ...?state.dataOrNull, <---- Old Data
     ...responseData.data, <---- New Data
   ]);
+  //And on controller emit state like this for pagination
+   emit(SuccessState.pagination(...)); //BLOC
+   state=SuccessState.pagination(...); //Riverpod
 }
 ```
-You can go to the top section to see how to use PaginationResponse on [Controller](#controller).
+You can go to the top section to see how to use PaginationResponse on [Controller](#Controller).
