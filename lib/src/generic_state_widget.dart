@@ -35,10 +35,9 @@ class GenericStateWidget<T> extends StatelessWidget {
   Widget build(
     BuildContext context,
   ) {
-    final textTheme = Theme.of(context).textTheme;
     final state = this.state;
     Widget outputChild = switch (state) {
-      SuccessState<T>() => _onSuccessWidget(state, textTheme),
+      SuccessState<T>() => _onSuccessWidget(state),
       ErrorState<T>() => onError?.call(state) ??
           Builder(builder: (context) {
             final outputWidget = Padding(
@@ -57,7 +56,8 @@ class GenericStateWidget<T> extends StatelessWidget {
                   Text(
                     state.error.toString(),
                     textAlign: TextAlign.center,
-                    style: textTheme.displayMedium?.copyWith(
+                    style: TextStyle(
+                      fontSize: 18,
                       color: Colors.grey.shade500,
                       fontWeight: FontWeight.w500,
                     ),
@@ -68,9 +68,10 @@ class GenericStateWidget<T> extends StatelessWidget {
                   Center(
                     child: ElevatedButton(
                       onPressed: onErrorReload,
-                      child: Text(
+                      child: const Text(
                         "Reload",
-                        style: textTheme.displaySmall?.copyWith(
+                        style: TextStyle(
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -118,15 +119,15 @@ class GenericStateWidget<T> extends StatelessWidget {
 
   Widget _onSuccessWidget(
     SuccessState<T> state,
-    TextTheme textTheme,
   ) {
     if (isEmptyCheck.call(state) == true) {
       return Builder(builder: (context) {
         final returnWidget = Center(
           child: onEmpty?.call(state) ??
-              Text(
+              const Text(
                 "No Result",
-                style: textTheme.displaySmall?.copyWith(
+                style: TextStyle(
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),

@@ -21,6 +21,7 @@ For Normal API request you can use something like this:
     try {
       final repositoryData = await repository.getData();
       state = SuccessState(repositoryData);
+      //Or state= SuccessState.pagination(...) if its pagination type
     } catch (e, s) {
       if (state.showToastInError(isRefresh)) {
         showCustomToast(e.toString());
@@ -97,9 +98,11 @@ like this:
 ```
     Text(
       state.dataOrNull?.userName ?? "Loading...",
-      style: textTheme.displaySmall?.copyWith(
-          color: ColorConstant.blackTextColor,
-          fontWeight: FontWeight.bold),
+      style: TextStyle(
+          fontSize: 16,
+          color: Colors.black,
+          fontWeight: FontWeight.bold,
+      ),
     ),
         
 ```
@@ -111,9 +114,11 @@ Or you might set different value on success, and on error and on loading.
         error: (state) => "-",
         loading: () => "Loading...",
       ),
-      style: textTheme.displaySmall?.copyWith(
-          color: ColorConstant.blackTextColor,
-          fontWeight: FontWeight.bold),
+      style: TextStyle(
+          fontSize: 16,
+          color:  Colors.black,
+          fontWeight: FontWeight.bold,
+          ),
     ),
 ```
 And finally it comes with state checker methods like:
