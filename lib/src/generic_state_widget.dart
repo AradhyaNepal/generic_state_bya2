@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:generic_state_bya2/src/generic_state.dart';
 
-
-
 class GenericStateWidget<T> extends StatelessWidget {
+  //Must now be sliver
   final Widget Function(SuccessState<T>) onSuccess;
   final Widget Function(ErrorState<T>)? onError;
   final Widget Function()? loadingShimmer;
-  final Future<void> Function() onErrorReload;
+  final void Function() onErrorReload;
+
+  ///Does not work for slivers
   final Future<void> Function()? onRefresh;
   final GenericState<T> state;
-  final bool Function(SuccessState<T>)? isEmptyCheck;
+  final bool Function(SuccessState<T>) isEmptyCheck;
 
   ///[isEmptyCheck] value must be true to display this widget.
   ///If widget not passed "No result" text will be shown.
   final Widget Function(SuccessState<T>)? onEmpty;
+  final bool isSliver;
 
   const GenericStateWidget({
     super.key,
@@ -24,45 +26,85 @@ class GenericStateWidget<T> extends StatelessWidget {
     this.loadingShimmer,
     this.onRefresh,
     this.onError,
-    this.isEmptyCheck,
+    required this.isEmptyCheck,
     this.onEmpty,
+    this.isSliver = false,
   });
 
   @override
   Widget build(
-      BuildContext context,
-      ) {
+    BuildContext context,
+  ) {
     final textTheme = Theme.of(context).textTheme;
     final state = this.state;
     Widget outputChild = switch (state) {
       SuccessState<T>() => _onSuccessWidget(state, textTheme),
       ErrorState<T>() => onError?.call(state) ??
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                state.error.toString(),
-              ),
-              Center(
-                child: TextButton(
-                  onPressed: onErrorReload,
-                  child: Text(
-                    "Reload",
-                    style: textTheme.displaySmall?.copyWith(
-                      fontWeight: FontWeight.bold,
+          Builder(builder: (context) {
+            final outputWidget = Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 5),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(
+                    height: 30,
+                  ),
+                  const Center(
+                    child: Icon(
+                      Icons.error,
                     ),
                   ),
-                ),
+                  Text(
+                    state.error.toString(),
+                    textAlign: TextAlign.center,
+                    style: textTheme.displayMedium?.copyWith(
+                      color: Colors.grey.shade500,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 15,
+                  ),
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: onErrorReload,
+                      child: Text(
+                        "Reload",
+                        style: textTheme.displaySmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 30,
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+            if (isSliver) {
+              return SliverToBoxAdapter(
+                child: outputWidget,
+              );
+            } else {
+              return outputWidget;
+            }
+          }),
       _ => loadingShimmer?.call() ??
-          const Center(
-            child: CircularProgressIndicator(),
-          ),
+          Builder(builder: (context) {
+            const outputWidget = Center(
+              child: CircularProgressIndicator(),
+            );
+            if (isSliver) {
+              return const SliverFillRemaining(
+                child: outputWidget,
+              );
+            } else {
+              return outputWidget;
+            }
+          }),
     };
-    if (onRefresh != null) {
+    if (onRefresh != null && !isSliver && !state.isLoading) {
       return RefreshIndicator(
         child: outputChild,
         onRefresh: () async {
@@ -75,41 +117,57 @@ class GenericStateWidget<T> extends StatelessWidget {
   }
 
   Widget _onSuccessWidget(
-      SuccessState<T> state,
-      TextTheme textTheme,
-      ) {
-    if (isEmptyCheck?.call(state) == true) {
-      return onEmpty?.call(state) ??
-          Text(
-            "No Result",
-            style: textTheme.displaySmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+    SuccessState<T> state,
+    TextTheme textTheme,
+  ) {
+    if (isEmptyCheck.call(state) == true) {
+      return Builder(builder: (context) {
+        final returnWidget = Center(
+          child: onEmpty?.call(state) ??
+              Text(
+                "No Result",
+                style: textTheme.displaySmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+        );
+        if (isSliver) {
+          return SliverToBoxAdapter(
+            child: returnWidget,
           );
+        }
+        return returnWidget;
+      });
     } else {
       return onSuccess(state);
     }
   }
 }
 
+///Pagination loading does not work for sliver
 class GenericStatePaginationWidget<T> extends StatefulWidget {
   //Below are for GenericStateWidget
+  //Must now be sliver
   final Widget Function(SuccessState<T>) onSuccess;
   final Widget Function(ErrorState<T>)? onError;
   final Widget Function()? loadingShimmer;
-  final Future<void> Function() onErrorReload;
+  final void Function() onErrorReload;
+
+  ///Does not work for slivers
   final Future<void> Function()? onRefresh;
   final GenericState<T> state;
-  final bool Function(SuccessState<T>)? isEmptyCheck;
+  final bool Function(SuccessState<T>) isEmptyCheck;
 
   ///[isEmptyCheck] value must be true to display this widget.
   ///If widget not passed "No result" text will be shown.
   final Widget Function(SuccessState<T>)? onEmpty;
+  final bool isSliver;
 
   //Below are for Pagination
   final ScrollController scrollController;
   final VoidCallback toFetchNextPage;
   final Axis axis;
+
   ///Set false if you have having issue on infinite size error
   final bool wrapExpanded;
   final MainAxisSize mainAxisSize;
@@ -124,11 +182,12 @@ class GenericStatePaginationWidget<T> extends StatefulWidget {
     this.loadingShimmer,
     this.onRefresh,
     this.onError,
-    this.isEmptyCheck,
+    required this.isEmptyCheck,
     this.onEmpty,
     this.axis = Axis.vertical,
-    this.wrapExpanded=true,
-    this.mainAxisSize=MainAxisSize.max,
+    this.wrapExpanded = true,
+    this.mainAxisSize = MainAxisSize.max,
+    this.isSliver = false,
   });
 
   @override
@@ -153,37 +212,39 @@ class _GenericStatePaginationWidgetState<T>
 
   @override
   Widget build(BuildContext context) {
-    return Flex(
-      direction: widget.axis,
-      mainAxisSize: widget.mainAxisSize,
-      children: [
-        Builder(
-            builder: (context) {
-              final outputWidget= Expanded(
-                child: GenericStateWidget(
-                  state:widget.state,
-                  onSuccess:widget.onSuccess,
-                  onErrorReload:widget.onErrorReload,
-                  loadingShimmer:widget.loadingShimmer,
-                  onRefresh:widget.onRefresh,
-                  onError:widget.onError,
-                  isEmptyCheck:widget.isEmptyCheck,
-                  onEmpty:widget.onEmpty,
-
-                ),
-              );
-              if(widget.wrapExpanded){
-                return Expanded(child: outputWidget);
-              }else{
-                return outputWidget;
+    return GenericStateWidget(
+      state: widget.state,
+      onSuccess: (state) {
+        if (widget.isSliver) {
+          return widget.onSuccess(state);
+        }
+        final onSuccess = widget.onSuccess(state);
+        final outputValue = Flex(
+          direction: widget.axis,
+          mainAxisSize: widget.mainAxisSize,
+          children: [
+            Builder(builder: (context) {
+              if (widget.wrapExpanded) {
+                return Expanded(child: onSuccess);
+              } else {
+                return onSuccess;
               }
-            }
-        ),
-        if(widget.state.isPaginationLoading)
-          const Center(
-            child: CircularProgressIndicator(),
-          ),
-      ],
+            }),
+            if (widget.state.isPaginationLoading)
+              const Center(
+                child: CircularProgressIndicator(),
+              ),
+          ],
+        );
+        return outputValue;
+      },
+      onErrorReload: widget.onErrorReload,
+      loadingShimmer: widget.loadingShimmer,
+      onRefresh: widget.onRefresh,
+      onError: widget.onError,
+      isEmptyCheck: widget.isEmptyCheck,
+      onEmpty: widget.onEmpty,
+      isSliver: widget.isSliver,
     );
   }
 
