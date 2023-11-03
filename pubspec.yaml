@@ -1,9 +1,12 @@
 name: generic_state_bya2
-description: Generic State For BLOC or Riverpod
+description:
+  Generic State For any State Management. This package remove all the type casting hassle, and have 
+  methods and classes to deal with API, Pagination Responses or your own UseCase.
+
 
 repository: https://github.com/AradhyaNepal/generic_state_bya2
 issue_tracker: https://github.com/AradhyaNepal/generic_state_bya2/issues
-version: 0.0.2-unstable-release
+version: 0.0.3-unstable-release
 
 environment:
   sdk: '>=3.1.0 <4.0.0'
