@@ -117,7 +117,7 @@ like this:
     ),
         
 ```
-Or you might set different value on success, and on error and or loading.
+Or you might set different value on success, and on error and on loading.
 ```   
     Text(
       state.when(
@@ -167,5 +167,122 @@ Which can be used in situation like this:
 ```
 
 ### GenericStateWidget and GenericStatePaginationWidget
+GenericStateWidget and GenericStatePaginationWidget are really useful while dealing with api responses in the application.
+This package handles all the complex use cases which a developer needs to consider while integrating api responses.
+``` 
+      GenericStateWidget(
+        state: ref.watch(homeProvider),
+        onSuccess: (state) => Column(
+         ...
+        ),
+        onErrorReload: ()async {
+          ref.read(homeProvider.notifier).loadData();
+        },
+        isEmptyCheck: (state) => state.data.isEmpty,
+        onRefresh: ()async{
+          await ref.read(allOfferProvider.notifier).loadData(isRefresh: true);
+        },
+        loadingShimmer: () => const HomeLoadingShimmer(),
+      ),
+```
+And the most interesting part is the pagination, by this package you don't need to worry about the complexity of pagination.
+This package deals with the listening of the scroll controller, 
+calling the suitable method when we need to do pagination, and show the loading of pagination.
+```
+ final ScrollController scrollController = ScrollController();
+ 
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(friendListProvider(widget.type));
+    return GenericStatePaginationWidget(
+      state: state,
+      scrollController: scrollController,
+      onRefresh: () async {
+        await ref
+            .read(friendListProvider(widget.type).notifier)
+            .getFriends(ref, isRefresh: true);
+      },
+      isEmptyCheck: (state) => state.data.isEmpty,
+      onSuccess: (state) {
+        return ListView.builder(
+          controller: scrollController,
+          itemCount: state.data.length,
+          itemBuilder: (context, index) {
+            return IndividualFriendWidget(
+              item: state.data[index],
+            );
+          },
+        );
+      },
+      toFetchNextPage: () {
+        ref
+            .read(friendListProvider(widget.type).notifier)
+            .getFriends(ref, isPagination: true);
+      },
+      onErrorReload: () async {
+        ref
+            .read(friendListProvider(widget.type).notifier)
+            .getFriends(ref);
+      },
+      loadingShimmer: () => const FriendsLoadingShimmer(),
+    );
+  }
+  
+  @override
+  void dispose() {
+    scrollController.dispose();
+    super.dispose();
+  }
 
+```
+Just few things to remember are:
+* Make sure you have passed ScrollController on the scrollable slice of the UI.
+* Dispose the ScrollController. I repeat, Dispose the ScrollController. 
+Not doing so will not cause any problem with the package or with the application. 
+But it causes memory leaks, which is bad programming practice.
+
+Some time the GenericStateWidget or GenericStatePaginationWidget is inside CustomScrollView,
+that means the parent is expecting child to be a Sliver not a normal RenderBox.
+
+In this case you can pass isSliver: true, which is false by default.
+```
+   GenericStatePaginationWidget(
+      isSliver: true,
+      ...
+   ),
+```
+Just few things to remember are:
+* If isSliver is true, the code which you passed on onRefresh will never run. 
+Because you need to handle onRefresh on parent class, CustomScrollView.
+* Similarly, unlike normal pagination widget, loading indicator on bottom when next page is loading
+will not work on isSliver is true, you have to manually set loading on the last item on the ListView.
+``` 
+    GenericStatePaginationWidget(
+      onSuccess: (state) {
+        return SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (_, int index) {
+              final bool showPaginationLoading =
+                  state.isPaginationLoading && index == state.data.length - 1;
+              return IndividualFriendWidget(
+                item: state.data[index],
+                showPaginationLoading: showPaginationLoading,
+              );
+            },
+            childCount: state.data.length,
+          ),
+        );
+      },
+      ...
+    ),
+    
+    //IndividualFriendWidget
+    Column(
+      children: [
+        ...
+        if(showPaginationLoading)
+          const Center(child: CircularProgressIndicator(),),
+      ],
+    )
+```
 
