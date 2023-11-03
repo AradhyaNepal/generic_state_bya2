@@ -1,21 +1,16 @@
 # generic_state_bya2
-
-* This package is still on development phase with lots of testing still pending to be done
-  Documentation coming soon
-
 Generic State For any State Management. This package remove all the type casting hassle, and have
 methods and classes to deal with API, Pagination Responses or your own UseCase.
 
 ## Note
-
-For full customization of this package, I recommend cloning the Github Repository and editing as per
-your need.
-Because Generic State is always different as per the project requirements and setups.
+GenericState is always different as per the project requirements and setups, 
+so for full customization of this package, I recommend cloning the Github Repository
+and editing as per your need. 
+If you do so you can better customize LoadingIndicator, on error graphics, on no data graphics, and much more.
 
 ## Usage
 
 ### Controller
-
 For Normal API request you can use something like this:
 
 ```
@@ -36,9 +31,7 @@ For Normal API request you can use something like this:
     }
   }
 ```
-
 Or, for Pagination API request you can use like this:
-
 ```
   Future<void> fetchValue({
     bool isRefresh = false,
@@ -73,12 +66,9 @@ Or, for Pagination API request you can use like this:
     }
   }
 }
-
 ```
-For this you need to set return type of repository data as PaginationResponse.
-
+For this you need to set return type of repository data as [PaginationResponse](#PaginationResponse).
 ### Helper Methods
-
 The best part about this generic state is that it comes with lots of helper methods which removes
 the type casting hassle.
 
@@ -86,7 +76,6 @@ Most important usage of this would be getting the data of the generic state on s
 
 In UI you need to get the value, sometime need to provide alternative value if the state is not
 success or sometimes needs to map the value.
-
 ```
   final state = SuccessState(1);
   final data = state.dataOrNull;
@@ -101,13 +90,11 @@ success or sometimes needs to map the value.
     loading: () => 0,
   );
 ```
-
 Above are the helper methods the package provides.
 You can use this methods in scenarios like on username of app header. You might need to set the
 Username on success but
 when the state is loading or other you want to show user Loading... text. So you can do something
 like this:
-
 ```
     Text(
       state.dataOrNull?.userName ?? "Loading...",
@@ -165,7 +152,6 @@ Which can be used in situation like this:
   );
 } 
 ```
-
 ### GenericStateWidget and GenericStatePaginationWidget
 GenericStateWidget and GenericStatePaginationWidget are really useful while dealing with api responses in the application.
 This package handles all the complex use cases which a developer needs to consider while integrating api responses.
@@ -180,7 +166,7 @@ This package handles all the complex use cases which a developer needs to consid
         },
         isEmptyCheck: (state) => state.data.isEmpty,
         onRefresh: ()async{
-          await ref.read(allOfferProvider.notifier).loadData(isRefresh: true);
+          await ref.read(homeProvider.notifier).loadData(isRefresh: true);
         },
         loadingShimmer: () => const HomeLoadingShimmer(),
       ),
@@ -233,13 +219,12 @@ calling the suitable method when we need to do pagination, and show the loading 
     scrollController.dispose();
     super.dispose();
   }
-
 ```
 Just few things to remember are:
 * Make sure you have passed ScrollController on the scrollable slice of the UI.
 * Dispose the ScrollController. I repeat, Dispose the ScrollController. 
 Not doing so will not cause any problem with the package or with the application. 
-But it causes memory leaks, which is bad programming practice.
+But it causes memory leaks, which a good programmer always handle.
 
 Some time the GenericStateWidget or GenericStatePaginationWidget is inside CustomScrollView,
 that means the parent is expecting child to be a Sliver not a normal RenderBox.
@@ -285,4 +270,55 @@ will not work on isSliver is true, you have to manually set loading on the last 
       ],
     )
 ```
-
+### PaginationResponse
+Thanks to PaginationResponse, our package figures out whether the page have nextPage or not,
+accordingly whether to load the next or not. And helps on lots of others setups required on pagination.
+```
+//Do the setup of PaginationResponse, mostly in main, if you don't do so below value will be used in default.
+  PaginationResponseSetup.setup(
+    haveNext: (response,pageNumber){
+      return response["totalPages"] > pageNumber;
+    },
+    paramsMap: (pageIndex,pageSize){
+      return {
+        "pageIndex": pageIndex,
+        "pageSize": pageSize,
+      };
+    },
+    pageSize: 20,
+  );
+  
+//Return PaginationReponse in your repository.
+class FriendsRepository extends BaseRepository {
+  Future<PaginationResponse<List<Friend>>> getFriendList(
+      {required int pageIndex}) async {
+    return await get<PaginationResponse<List<Friend>>>(
+      RequestInput(
+        url: ApiConstants.getAllFriends,
+        params: PaginationResponse.params(pageIndex), <---------- Params the PaginationResponse class Provide
+        body: null,
+        parseJson: (response) {
+          return PaginationResponse(  <-------- Returning PaginationResponse after API Fetching and Json Parsing
+            data: (response["data"] as List)
+                .map((e) => Friend.fromJson(e))
+                .toList(),
+            response: response,
+            pageIndex: pageIndex,
+          );
+        },
+      ),
+    );
+  }
+  
+  //And use it like this
+  final response=await FriendsRepository().getFriendList(pageIndex:1);
+  responseData.data;
+  responseData.haveNext;
+  responseData.pageIndex;
+  responseData.oldPlusNew([
+    ...?state.dataOrNull, <---- Old Data
+    ...responseData.data, <---- New Data
+  ]);
+}
+```
+You can go to the top section to see how to use PaginationResponse on [Controller](#controller).

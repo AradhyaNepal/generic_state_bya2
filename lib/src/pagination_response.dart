@@ -1,4 +1,4 @@
-import 'package:generic_state_bya2/src/page_response_setup.dart';
+import 'package:generic_state_bya2/src/pagination_response_setup.dart';
 
 class PaginationResponse<T> {
   T data;
@@ -9,7 +9,7 @@ class PaginationResponse<T> {
     required this.data,
     required Map response,
     required this.pageIndex,
-  }) : haveNext = PageResponseSetup.haveNext(response,pageIndex);
+  }) : haveNext = PaginationResponseSetup.haveNext(response,pageIndex);
 
   PaginationResponse.fromState({
     required this.data,
@@ -20,7 +20,7 @@ class PaginationResponse<T> {
   static Map<String, dynamic> params(
     int pageIndex,
   ) {
-    return  PageResponseSetup.params(pageIndex,PageResponseSetup.pageSize);
+    return  PaginationResponseSetup.params(pageIndex,PaginationResponseSetup.pageSize);
   }
 
   ///[oldPlusNew] is the data to be shown on pagination success which stores previous page data
