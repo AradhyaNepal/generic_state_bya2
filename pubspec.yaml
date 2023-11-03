@@ -3,7 +3,7 @@ description: Generic State For BLOC or Riverpod
 
 repository: https://github.com/AradhyaNepal/generic_state_bya2
 issue_tracker: https://github.com/AradhyaNepal/generic_state_bya2/issues
-version: 0.0.1-unstable-release
+version: 0.0.2-unstable-release
 
 environment:
   sdk: '>=3.1.0 <4.0.0'
