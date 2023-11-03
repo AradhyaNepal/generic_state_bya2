@@ -1,0 +1,18 @@
+name: generic_state_bya2
+description: Generic State For BLOC or Riverpod
+
+repository: https://github.com/AradhyaNepal/generic_state_bya2
+issue_tracker: https://github.com/AradhyaNepal/generic_state_bya2/issues
+version: 0.0.1-unstable-release
+
+environment:
+  sdk: '>=3.1.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
