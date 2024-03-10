@@ -4,12 +4,12 @@ typedef ParamsType = Map<String, dynamic> Function(
 
 class PaginationResponseSetup {
   static HaveNextType _haveNext = (response, pageNumber) {
-    return response["totalPages"] > pageNumber;
+    return response["data"]["totalPages"] > pageNumber;
   };
   static ParamsType _params = (pageNumber, pageSize) {
     return {
-      "pageIndex": pageNumber,
-      "pageSize": PaginationResponseSetup.pageSize,
+      "page": pageNumber,
+      "pageSize": pageSize,
     };
   };
 

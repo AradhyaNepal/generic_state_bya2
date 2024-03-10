@@ -1,7 +1,7 @@
-
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:generic_state_bya2/src/pagination_response.dart';
+import 'pagination_response.dart';
 
 sealed class GenericState<T> {
   ///State is either [SuccessState]
@@ -16,6 +16,38 @@ sealed class GenericState<T> {
   ///State is either [LoadingState] or [InitialState]
   bool get isLoading {
     return this is InitialState || this is LoadingState;
+  }
+
+  ///State is only [LoadingState]
+  bool get isOnlyLoading {
+    return this is LoadingState;
+  }
+
+  ///State is only [InitialState]
+  bool get isOnlyInitial {
+    return this is InitialState;
+  }
+
+  void listenAndReact({
+    required void Function(
+      T success,
+    ) onSuccess,
+    required void Function(
+        Object error,
+        ) onError,
+  }) {
+    final state=this;
+      switch(state){
+        case SuccessState():
+         onSuccess(state.data);
+          break;
+        case ErrorState():
+          onError(state.error);
+          break;
+        default:
+          break;
+      }
+
   }
 
   ///State is not [SuccessState]
@@ -37,6 +69,17 @@ sealed class GenericState<T> {
       SuccessState() => state.data,
       ErrorState() => state.cacheData,
       LoadingState() => state.cacheData,
+    };
+  }
+
+  ///If [ErrorState] or null
+  ErrorState? get errorOrNull {
+    final state = this;
+    return switch (state) {
+      InitialState() => null,
+      SuccessState() => null,
+      ErrorState() => state,
+      LoadingState() => null,
     };
   }
 
@@ -63,13 +106,13 @@ sealed class GenericState<T> {
   }
 
   K when<K>(
-      {required K Function(SuccessState<T>) success,
-        required K Function(ErrorState<T>) error,
-        required K Function() loading}) {
+      {required K Function(T) success,
+      required K Function(Object) error,
+      required K Function() loading}) {
     final state = this;
     return switch (state) {
-      SuccessState() => success(state),
-      ErrorState() => error(state),
+      SuccessState() => success(state.data),
+      ErrorState() => error(state.error),
       _ => loading(),
     };
   }
@@ -121,14 +164,14 @@ sealed class GenericState<T> {
         scrollController.position.maxScrollExtent * 0.9;
   }
 
+  //Todo: Document
+  //Todo: Assert that both is not true
   bool showLoading(bool isRefresh, bool isPagination) =>
       !isRefresh && !isPagination;
 
   bool showToastInError(bool isRefresh) {
     return (isRefresh && isSuccess) || isPaginationLoading;
   }
-
-
 
   //Below are Copies Methods to update the State
 
@@ -193,7 +236,10 @@ class ErrorState<T> extends GenericState<T> {
   final Object? stackTrace;
 
   ErrorState(this.error, this.stackTrace, {T? cacheData})
-      : _cacheData = cacheData;
+      : _cacheData = cacheData{
+    log(error.toString());
+    log(stackTrace.toString());
+  }
 }
 
 class LoadingState<T> extends GenericState<T> {
@@ -213,10 +259,10 @@ class SuccessState<T> extends GenericState<T> {
   final bool _paginationLoading;
 
   PaginationResponse<T> get _response => PaginationResponse.fromState(
-    data: _data,
-    haveNext: _haveNext,
-    pageIndex: _pageIndex,
-  );
+        data: _data,
+        haveNext: _haveNext,
+        pageIndex: _pageIndex,
+      );
 
   SuccessState(this._data)
       : _pageIndex = 1,

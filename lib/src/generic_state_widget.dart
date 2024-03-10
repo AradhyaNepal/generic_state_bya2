@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:generic_state_bya2/src/generic_state.dart';
+import 'package:generic_state_bya2/src/generic_state_setup.dart';
+import 'generic_state.dart';
 
 class GenericStateWidget<T> extends StatelessWidget {
   //Must now be sliver
-  final Widget Function(SuccessState<T>) onSuccess;
+  final Widget Function(T) onSuccess;
   final Widget Function(ErrorState<T>)? onError;
   final Widget Function()? loadingShimmer;
   final void Function() onErrorReload;
@@ -11,7 +12,7 @@ class GenericStateWidget<T> extends StatelessWidget {
   ///Does not work for slivers
   final Future<void> Function()? onRefresh;
   final GenericState<T> state;
-  final bool Function(SuccessState<T>) isEmptyCheck;
+  final bool Function(T) isEmptyCheck;
 
   ///[isEmptyCheck] value must be true to display this widget.
   ///If widget not passed "No result" text will be shown.
@@ -48,11 +49,7 @@ class GenericStateWidget<T> extends StatelessWidget {
                   const SizedBox(
                     height: 30,
                   ),
-                  const Center(
-                    child: Icon(
-                      Icons.error,
-                    ),
-                  ),
+                  GenericStateSetup.onError(),
                   Text(
                     state.error.toString(),
                     textAlign: TextAlign.center,
@@ -120,17 +117,11 @@ class GenericStateWidget<T> extends StatelessWidget {
   Widget _onSuccessWidget(
     SuccessState<T> state,
   ) {
-    if (isEmptyCheck.call(state) == true) {
+    if (isEmptyCheck.call(state.data) == true) {
       return Builder(builder: (context) {
         final returnWidget = Center(
           child: onEmpty?.call(state) ??
-              const Text(
-                "No Result",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              GenericStateSetup.onEmpty(),
         );
         if (isSliver) {
           return SliverToBoxAdapter(
@@ -140,7 +131,7 @@ class GenericStateWidget<T> extends StatelessWidget {
         return returnWidget;
       });
     } else {
-      return onSuccess(state);
+      return onSuccess(state.data);
     }
   }
 }
@@ -149,7 +140,7 @@ class GenericStateWidget<T> extends StatelessWidget {
 class GenericStatePaginationWidget<T> extends StatefulWidget {
   //Below are for GenericStateWidget
   //Must now be sliver
-  final Widget Function(SuccessState<T>) onSuccess;
+  final Widget Function(T) onSuccess;
   final Widget Function(ErrorState<T>)? onError;
   final Widget Function()? loadingShimmer;
   final void Function() onErrorReload;
@@ -157,7 +148,7 @@ class GenericStatePaginationWidget<T> extends StatefulWidget {
   ///Does not work for slivers
   final Future<void> Function()? onRefresh;
   final GenericState<T> state;
-  final bool Function(SuccessState<T>) isEmptyCheck;
+  final bool Function(T) isEmptyCheck;
 
   ///[isEmptyCheck] value must be true to display this widget.
   ///If widget not passed "No result" text will be shown.
@@ -215,11 +206,11 @@ class _GenericStatePaginationWidgetState<T>
   Widget build(BuildContext context) {
     return GenericStateWidget(
       state: widget.state,
-      onSuccess: (state) {
+      onSuccess: (data) {
         if (widget.isSliver) {
-          return widget.onSuccess(state);
+          return widget.onSuccess(data);
         }
-        final onSuccess = widget.onSuccess(state);
+        final onSuccess = widget.onSuccess(data);
         final outputValue = Flex(
           direction: widget.axis,
           mainAxisSize: widget.mainAxisSize,
