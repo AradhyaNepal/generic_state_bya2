@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:generic_state_bya2/generic.dart';
 import 'package:generic_state_bya2/src/generic_state_setup.dart';
 import 'generic_state.dart';
 
@@ -49,31 +50,12 @@ class GenericStateWidget<T> extends StatelessWidget {
                   const SizedBox(
                     height: 30,
                   ),
-                  GenericStateSetup.onError(),
-                  Text(
-                    state.error.toString(),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey.shade500,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+                  GenericStateSetup.onErrorIcon(),
+                  GenericStateSetup.errorMessage(state.error),
                   const SizedBox(
                     height: 15,
                   ),
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: onErrorReload,
-                      child: const Text(
-                        "Reload",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
+                  GenericStateSetup.onErrorReloadButton(onErrorReload),
                   const SizedBox(
                     height: 30,
                   ),
@@ -90,11 +72,11 @@ class GenericStateWidget<T> extends StatelessWidget {
           }),
       _ => loadingShimmer?.call() ??
           Builder(builder: (context) {
-            const outputWidget = Center(
-              child: CircularProgressIndicator(),
+            final outputWidget = Center(
+              child: GenericStateSetup.onLoading(),
             );
             if (isSliver) {
-              return const SliverFillRemaining(
+              return SliverFillRemaining(
                 child: outputWidget,
               );
             } else {
@@ -120,8 +102,7 @@ class GenericStateWidget<T> extends StatelessWidget {
     if (isEmptyCheck.call(state.data) == true) {
       return Builder(builder: (context) {
         final returnWidget = Center(
-          child: onEmpty?.call(state) ??
-              GenericStateSetup.onEmpty(),
+          child: onEmpty?.call(state) ?? GenericStateSetup.onEmpty(),
         );
         if (isSliver) {
           return SliverToBoxAdapter(
@@ -223,8 +204,8 @@ class _GenericStatePaginationWidgetState<T>
               }
             }),
             if (widget.state.isPaginationLoading)
-              const Center(
-                child: CircularProgressIndicator(),
+              Center(
+                child: GenericStateSetup.onLoading(),
               ),
           ],
         );
